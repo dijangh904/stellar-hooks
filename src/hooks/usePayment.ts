@@ -35,6 +35,10 @@ export interface UsePaymentOptions {
   fee?: number;
   /** Polling timeout in seconds. Default: 60 */
   timeoutSeconds?: number;
+  /** Callback fired when the transaction is successfully confirmed. */
+  onSuccess?: (hash: string) => void;
+  /** Callback fired when the transaction fails or an error occurs. */
+  onError?: (error: Error) => void;
 }
 
 /**
@@ -99,6 +103,8 @@ export function usePayment(options: UsePaymentOptions): UsePaymentReturn {
     memo,
     fee = 100,
     timeoutSeconds = 60,
+    onSuccess,
+    onError,
   } = options;
 
   const { config } = useStellarContext();
@@ -106,6 +112,8 @@ export function usePayment(options: UsePaymentOptions): UsePaymentReturn {
   const { submit: submitXdr, reset, ...txState } = useTransaction({
     mode: "classic",
     timeoutSeconds,
+    onSuccess,
+    onError,
   });
 
   const submit = useCallback(async () => {

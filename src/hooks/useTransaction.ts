@@ -16,6 +16,10 @@ export interface UseTransactionOptions {
   mode?: "soroban" | "classic";
   /** Polling timeout in seconds. Default: 60 */
   timeoutSeconds?: number;
+  /** Callback fired when the transaction is successfully confirmed. */
+  onSuccess?: (hash: string) => void;
+  /** Callback fired when the transaction fails or an error occurs. */
+  onError?: (error: Error) => void;
 }
 
 /**
@@ -95,7 +99,7 @@ const initial: TransactionState = {
 export function useTransaction(
   options: UseTransactionOptions = {}
 ): UseTransactionReturn {
-  const { mode = "soroban", timeoutSeconds = 60 } = options;
+  const { mode = "soroban", timeoutSeconds = 60, onSuccess, onError } = options;
   const { config } = useStellarContext();
   const [state, dispatch] = useReducer(reducer, initial);
 
@@ -129,6 +133,7 @@ export function useTransaction(
 
             if (getResult.status === rpc.Api.GetTransactionStatus.SUCCESS) {
               dispatch({ type: "SUCCESS", hash: txHash });
+              onSuccess?.(txHash);
               return;
             }
 
@@ -146,15 +151,18 @@ export function useTransaction(
           // Horizon submitTransaction resolves when the tx is included in a ledger
           const result = await server.submitTransaction(tx as Parameters<typeof server.submitTransaction>[0]);
           dispatch({ type: "SUCCESS", hash: result.hash });
+          onSuccess?.(result.hash);
         }
       } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
         dispatch({
           type: "ERROR",
-          payload: err instanceof Error ? err : new Error(String(err)),
+          payload: error,
         });
+        onError?.(error);
       }
     },
-    [mode, config, timeoutSeconds]
+    [mode, config, timeoutSeconds, onSuccess, onError]
   );
 
   const reset = useCallback(() => dispatch({ type: "RESET" }), []);

@@ -167,16 +167,23 @@ export function useClaimableBalances(
  *
  * @example
  * ```tsx
- * const { claim, status, hash, error } = useClaimBalance();
+ * const { claim, status, hash, error } = useClaimBalance({
+ *   onSuccess: (hash) => console.log("Claimed!", hash),
+ * });
  *
  * return <button onClick={() => claim(balance.id)}>Claim</button>;
  * ```
  */
-export function useClaimBalance(): UseClaimBalanceReturn {
+export function useClaimBalance(
+  options: UseClaimBalanceOptions = {}
+): UseClaimBalanceReturn {
+  const { onSuccess, onError } = options;
   const { config } = useStellarContext();
   const { signTransaction, publicKey } = useFreighter();
   const { submit: submitXdr, reset, ...txState } = useTransaction({
     mode: "classic",
+    onSuccess,
+    onError,
   });
 
   const claim = useCallback(
