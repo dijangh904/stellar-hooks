@@ -46,8 +46,35 @@ export interface UsePathPaymentOptions {
   fee?: number;
   /** Polling timeout in seconds. Default: 60 */
   timeoutSeconds?: number;
+  /** Callback fired when the transaction is successfully confirmed. */
+  onSuccess?: (hash: string) => void;
+  /** Callback fired when the transaction fails or an error occurs. */
+  onError?: (error: Error) => void;
 }
 
+/**
+ * @example
+ * ```tsx
+ * // Strict send — send exactly 10 XLM, receive at least 9 USDC
+ * const {
+ *   submit,    // () => Promise<void>
+ *   status,    // "idle" | "submitting" | "polling" | "success" | "error"
+ *   hash,      // string | null
+ *   isLoading, // boolean
+ *   isSuccess, // boolean
+ *   isError,   // boolean
+ *   error,     // Error | null
+ *   reset,     // () => void
+ * } = usePathPayment({
+ *   mode: "strict-send",
+ *   sendAsset: { type: "native" },
+ *   sendAmount: "10",
+ *   destination: "GBXXX...",
+ *   destAsset: { type: "credit", code: "USDC", issuer: "GISSUER..." },
+ *   destMin: "9",
+ * });
+ * ```
+ */
 export interface UsePathPaymentReturn {
   submit: () => Promise<void>;
   status: TransactionStatus;
@@ -111,6 +138,8 @@ export function usePathPayment(
     path = [],
     fee = 100,
     timeoutSeconds = 60,
+    onSuccess,
+    onError,
   } = options;
 
   const { config } = useStellarContext();
@@ -118,6 +147,8 @@ export function usePathPayment(
   const { submit: submitXdr, reset, ...txState } = useTransaction({
     mode: "classic",
     timeoutSeconds,
+    onSuccess,
+    onError,
   });
 
   const submit = useCallback(async () => {

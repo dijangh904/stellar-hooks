@@ -35,8 +35,34 @@ export interface UsePaymentOptions {
   fee?: number;
   /** Polling timeout in seconds. Default: 60 */
   timeoutSeconds?: number;
+  /** Callback fired when the transaction is successfully confirmed. */
+  onSuccess?: (hash: string) => void;
+  /** Callback fired when the transaction fails or an error occurs. */
+  onError?: (error: Error) => void;
 }
 
+/**
+ * @example
+ * ```tsx
+ * const {
+ *   submit,    // () => Promise<void> — build, sign, and submit the payment
+ *   status,    // "idle" | "submitting" | "polling" | "success" | "error"
+ *   hash,      // string | null — transaction hash on success
+ *   isLoading, // boolean
+ *   isSuccess, // boolean
+ *   isError,   // boolean
+ *   error,     // Error | null
+ *   reset,     // () => void
+ * } = usePayment({
+ *   destination: "GBXXX...",
+ *   asset: { type: "native" },
+ *   amount: "10",
+ *   memo: "Thanks!",
+ * });
+ *
+ * return <button onClick={submit} disabled={isLoading}>Send XLM</button>;
+ * ```
+ */
 export interface UsePaymentReturn {
   /** Call this to build, sign, and submit the payment */
   submit: () => Promise<void>;
@@ -77,6 +103,8 @@ export function usePayment(options: UsePaymentOptions): UsePaymentReturn {
     memo,
     fee = 100,
     timeoutSeconds = 60,
+    onSuccess,
+    onError,
   } = options;
 
   const { config } = useStellarContext();
@@ -84,6 +112,8 @@ export function usePayment(options: UsePaymentOptions): UsePaymentReturn {
   const { submit: submitXdr, reset, ...txState } = useTransaction({
     mode: "classic",
     timeoutSeconds,
+    onSuccess,
+    onError,
   });
 
   const submit = useCallback(async () => {

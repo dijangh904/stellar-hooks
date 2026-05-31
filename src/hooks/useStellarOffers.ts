@@ -7,6 +7,20 @@ export interface UseStellarOffersOptions {
   refetchInterval?: number;
 }
 
+/**
+ * @example
+ * ```tsx
+ * const {
+ *   offers,        // Horizon.ServerApi.OfferRecord[] — open buy/sell offers
+ *   isLoading,     // boolean
+ *   error,         // Error | null
+ *   lastFetchedAt, // Date | null
+ *   refetch,       // () => Promise<void>
+ * } = useStellarOffers("G...", { refetchInterval: 10_000 });
+ *
+ * // Each offer: { id, selling, buying, amount, price, seller, ... }
+ * ```
+ */
 export interface UseStellarOffersReturn {
   offers: Horizon.ServerApi.OfferRecord[];
   isLoading: boolean;

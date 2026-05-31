@@ -11,6 +11,20 @@ export interface AssetMetadata {
   [key: string]: any;
 }
 
+/**
+ * @example
+ * ```tsx
+ * const {
+ *   metadata,  // AssetMetadata | null — matched CURRENCIES entry from stellar.toml
+ *   isLoading, // boolean
+ *   error,     // Error | null
+ * } = useAssetMetadata("USDC", "GISSUER...");
+ *
+ * // metadata.name  → human-readable asset name
+ * // metadata.image → logo URL
+ * // metadata.desc  → description
+ * ```
+ */
 export interface UseAssetMetadataReturn {
   metadata: AssetMetadata | null;
   isLoading: boolean;

@@ -1,6 +1,22 @@
 import { useStellarAccount, type UseStellarAccountOptions } from "./useStellarAccount";
 import type { StellarBalance } from "../types";
 
+/**
+ * @example
+ * ```tsx
+ * const {
+ *   balances,      // StellarBalance[] — all balances (XLM + tokens)
+ *   xlmBalance,    // StellarBalance | null — the native XLM entry
+ *   isLoading,     // boolean
+ *   error,         // Error | null
+ *   lastFetchedAt, // Date | null
+ *   refetch,       // () => Promise<void>
+ * } = useStellarBalance("G...");
+ *
+ * console.log(`XLM: ${xlmBalance?.balance}`);
+ * const tokens = balances.filter(b => !b.isNative);
+ * ```
+ */
 export interface UseStellarBalanceReturn {
   balances: StellarBalance[];
   xlmBalance: StellarBalance | null;

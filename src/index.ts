@@ -1,5 +1,5 @@
-// Provider
-export { StellarProvider } from "./context";
+// Provider & context
+export { StellarProvider, useStellarContext } from "./context";
 
 // Hooks
 export { useFreighter } from "./hooks/useFreighter";
@@ -11,6 +11,7 @@ export { useLedgerEntry } from "./hooks/useLedgerEntry";
 export { useStellarToml } from "./hooks/useStellarToml";
 export { useAssetMetadata } from "./hooks/useAssetMetadata";
 export { useStellarOffers } from "./hooks/useStellarOffers";
+export { usePayment } from "./hooks/usePayment";
 export { usePathPayment } from "./hooks/usePathPayment";
 export type {
   PathPaymentAsset,
@@ -23,6 +24,7 @@ export type {
   // Network
   StellarNetwork,
   NetworkConfig,
+  CustomNetworkConfig,
   // Account
   StellarAccountData,
   StellarBalance,
@@ -50,3 +52,6 @@ export type { UseStellarOffersOptions, UseStellarOffersReturn } from "./hooks/us
 
 // Network presets (useful for custom configs)
 export { NETWORK_CONFIGS } from "./types";
+
+// Utilities
+export { parseAccountResponse } from "./utils";

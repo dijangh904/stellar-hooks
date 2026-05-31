@@ -1,25 +1,36 @@
 import { Horizon } from "@stellar/stellar-sdk";
 import type { StellarBalance, StellarAccountData } from "../types";
 
+type AccountResponseWithReserveFields = Horizon.AccountResponse & {
+  num_sponsored?: number;
+  num_sponsoring?: number;
+};
+
 /**
  * Parse a raw Horizon AccountResponse into the friendlier StellarAccountData shape.
  */
 export function parseAccountResponse(
   raw: Horizon.AccountResponse
 ): StellarAccountData {
+  const account = raw as AccountResponseWithReserveFields;
   const balances: StellarBalance[] = raw.balances.map((b) => {
     const isNative = b.asset_type === "native";
-    return {
+    const balance: StellarBalance = {
       assetType: b.asset_type,
-      assetCode: "asset_code" in b ? b.asset_code : undefined,
-      assetIssuer: "asset_issuer" in b ? b.asset_issuer : undefined,
       balance: b.balance,
       balanceFloat: parseFloat(b.balance),
-      buyingLiabilities: b.buying_liabilities,
-      sellingLiabilities: b.selling_liabilities,
-      limit: "limit" in b ? b.limit : undefined,
+      buyingLiabilities:
+        "buying_liabilities" in b ? b.buying_liabilities : "0.0000000",
+      sellingLiabilities:
+        "selling_liabilities" in b ? b.selling_liabilities : "0.0000000",
       isNative,
     };
+
+    if ("asset_code" in b) balance.assetCode = b.asset_code;
+    if ("asset_issuer" in b) balance.assetIssuer = b.asset_issuer;
+    if ("limit" in b) balance.limit = b.limit;
+
+    return balance;
   });
 
   return {
@@ -27,6 +38,8 @@ export function parseAccountResponse(
     balances,
     sequence: raw.sequence,
     subentryCount: raw.subentry_count,
+    numSponsored: account.num_sponsored ?? 0,
+    numSponsoring: account.num_sponsoring ?? 0,
     thresholds: {
       lowThreshold: raw.thresholds.low_threshold,
       medThreshold: raw.thresholds.med_threshold,

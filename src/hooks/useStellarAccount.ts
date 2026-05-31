@@ -43,6 +43,23 @@ export interface UseStellarAccountOptions {
   refetchInterval?: number;
 }
 
+/**
+ * @example
+ * ```tsx
+ * const {
+ *   data,          // StellarAccountData | null — full account info
+ *   isLoading,     // boolean
+ *   error,         // Error | null
+ *   lastFetchedAt, // Date | null
+ *   refetch,       // () => Promise<void>
+ * } = useStellarAccount("G...");
+ *
+ * // data.balances  → StellarBalance[]
+ * // data.sequence  → string
+ * // data.raw       → raw Horizon.AccountResponse
+ * const xlm = data?.balances.find(b => b.isNative);
+ * ```
+ */
 export interface UseStellarAccountReturn extends AccountState {
   refetch: () => Promise<void>;
 }
@@ -105,9 +122,18 @@ export function useStellarAccount(
   useEffect(() => {
     if (!enabled || !publicKey || refetchInterval <= 0) return;
 
-    intervalRef.current = setInterval(() => void fetch(), refetchInterval);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    const intervalId = setInterval(() => void fetch(), refetchInterval);
+    intervalRef.current = intervalId;
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      clearInterval(intervalId);
+      if (intervalRef.current === intervalId) {
+        intervalRef.current = null;
+      }
     };
   }, [enabled, publicKey, refetchInterval, fetch]);
 

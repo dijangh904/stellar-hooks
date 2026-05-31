@@ -1,7 +1,7 @@
 import { useCallback, useReducer } from "react";
 import {
   Contract,
-  SorobanRpc,
+  rpc,
   Transaction,
   TransactionBuilder,
   Networks,
@@ -64,21 +64,34 @@ function createReducer<TResult>() {
  * Invoke a Soroban smart-contract method. Handles simulation, auth, submission,
  * and status polling in one hook.
  *
+ * @returns {UseContractCallReturn}
  * @example
  * ```tsx
- * const { call, status, result, error } = useSorobanContract({
+ * const {
+ *   call,     // (overrides?) => Promise<TResult | null> — trigger the contract call
+ *   status,   // "idle" | "building" | "signing" | "submitting" | "polling" | "success" | "error"
+ *   result,   // TResult | null — raw xdr.ScVal; parse with scValToNative()
+ *   hash,     // string | null — transaction hash on success
+ *   error,    // Error | null
+ *   isLoading,  // boolean — true while status is not idle/success/error
+ *   isSuccess,  // boolean
+ *   isError,    // boolean
+ *   reset,    // () => void — return to "idle"
+ * } = useSorobanContract({
  *   contractId: "CABC...XYZ",
  *   method: "increment",
  *   args: [nativeToScVal(1, { type: "u32" })],
  * });
  *
- * return <button onClick={() => call()} disabled={status === "submitting"}>
- *   {status === "success" ? `Done! Hash: ${result}` : "Increment"}
- * </button>;
+ * return (
+ *   <button onClick={() => call()} disabled={status !== "idle" && status !== "error"}>
+ *     {status === "success" ? `Done! Hash: ${hash}` : "Increment"}
+ *   </button>
+ * );
  * ```
  */
 export function useSorobanContract<TResult = unknown>(
-  options: ContractCallOptions
+  options: ContractCallOptions<TResult>
 ): UseContractCallReturn<TResult> {
   const { config } = useStellarContext();
   const { publicKey, networkPassphrase, signTransaction } = useFreighter();
@@ -92,7 +105,7 @@ export function useSorobanContract<TResult = unknown>(
   });
 
   const call = useCallback(
-    async (overrides?: Partial<ContractCallOptions>): Promise<TResult | null> => {
+    async (overrides?: Partial<ContractCallOptions<TResult>>): Promise<TResult | null> => {
       const {
         contractId,
         method,
@@ -100,11 +113,14 @@ export function useSorobanContract<TResult = unknown>(
         fee = BASE_FEE,
         timeoutSeconds = 30,
         sorobanRpcServer,
+        onSuccess,
+        onError,
       } = { ...options, ...overrides };
 
       if (!publicKey) {
         const err = new Error("No wallet connected. Call useFreighter().connect() first.");
         dispatch({ type: "ERROR", payload: err });
+        onError?.(err);
         return null;
       }
 
@@ -112,7 +128,7 @@ export function useSorobanContract<TResult = unknown>(
         // ── 1. Build ──────────────────────────────────────────────────────────
         dispatch({ type: "BUILDING" });
 
-        const server = sorobanRpcServer ?? new SorobanRpc.Server(config.sorobanRpcUrl);
+        const server = sorobanRpcServer ?? new rpc.Server(config.sorobanRpcUrl);
         const contract = new Contract(contractId);
 
         // Convert plain JS values to ScVals if needed
@@ -124,7 +140,7 @@ export function useSorobanContract<TResult = unknown>(
         const passphrase = networkPassphrase ?? config.networkPassphrase;
 
         const tx = new TransactionBuilder(account, {
-          fee,
+          fee: fee.toString(),
           networkPassphrase: passphrase,
         })
           .addOperation(contract.call(method, ...scArgs))
@@ -134,11 +150,11 @@ export function useSorobanContract<TResult = unknown>(
         // ── 2. Simulate ───────────────────────────────────────────────────────
         const simResult = await server.simulateTransaction(tx);
 
-        if (SorobanRpc.Api.isSimulationError(simResult)) {
+        if (rpc.Api.isSimulationError(simResult)) {
           throw new Error(`Simulation failed: ${simResult.error}`);
         }
 
-        const preparedTx = SorobanRpc.assembleTransaction(tx, simResult).build();
+        const preparedTx = rpc.assembleTransaction(tx, simResult).build();
 
         // ── 3. Sign ───────────────────────────────────────────────────────────
         dispatch({ type: "SIGNING" });
@@ -175,7 +191,7 @@ export function useSorobanContract<TResult = unknown>(
 
           const getResult = await server.getTransaction(txHash);
 
-          if (getResult.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+          if (getResult.status === rpc.Api.GetTransactionStatus.SUCCESS) {
             // Extract the return value from the meta
             let parsed: TResult = txHash as TResult;
 
@@ -194,10 +210,11 @@ export function useSorobanContract<TResult = unknown>(
             }
 
             dispatch({ type: "SUCCESS", payload: parsed, hash: txHash });
+            onSuccess?.(parsed);
             return parsed;
           }
 
-          if (getResult.status === SorobanRpc.Api.GetTransactionStatus.FAILED) {
+          if (getResult.status === rpc.Api.GetTransactionStatus.FAILED) {
             throw new Error(`Transaction failed: ${txHash}`);
           }
         }
@@ -206,10 +223,56 @@ export function useSorobanContract<TResult = unknown>(
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         dispatch({ type: "ERROR", payload: error });
+        onError?.(error);
         return null;
       }
     },
     [options, publicKey, networkPassphrase, signTransaction, config]
+  );
+
+  const simulate = useCallback(
+    async (overrides?: Partial<ContractCallOptions>): Promise<rpc.Api.SimulateTransactionResponse> => {
+      const {
+        contractId,
+        method,
+        args = [],
+        fee = BASE_FEE,
+        timeoutSeconds = 30,
+        sorobanRpcServer,
+      } = { ...options, ...overrides };
+
+      if (!publicKey) {
+        throw new Error("No wallet connected. Call useFreighter().connect() first.");
+      }
+
+      try {
+        const server = sorobanRpcServer ?? new rpc.Server(config.sorobanRpcUrl);
+        const contract = new Contract(contractId);
+
+        // Convert plain JS values to ScVals if needed
+        const scArgs = args.map((a) =>
+          a instanceof xdr.ScVal ? a : nativeToScVal(a)
+        );
+
+        const account = await server.getAccount(publicKey);
+        const passphrase = networkPassphrase ?? config.networkPassphrase;
+
+        const tx = new TransactionBuilder(account, {
+          fee: String(fee),
+          networkPassphrase: passphrase,
+        })
+          .addOperation(contract.call(method, ...scArgs))
+          .setTimeout(timeoutSeconds)
+          .build();
+
+        // Forward to RPC preflight endpoint
+        return await server.simulateTransaction(tx);
+      } catch (err) {
+        // Gracefully bubble up construction or RPC errors
+        throw err instanceof Error ? err : new Error(String(err));
+      }
+    },
+    [options, publicKey, networkPassphrase, config]
   );
 
   const reset = useCallback(() => dispatch({ type: "RESET" }), []);
@@ -220,6 +283,7 @@ export function useSorobanContract<TResult = unknown>(
     isSuccess: state.status === "success",
     isError: state.status === "error",
     call,
+    simulate,
     reset,
   };
 }
