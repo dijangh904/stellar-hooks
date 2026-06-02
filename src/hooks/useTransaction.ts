@@ -172,7 +172,6 @@ export function useTransaction(
         onError?.(error);
       }
     },
-    [mode, config, timeoutSeconds],
     [mode, config, timeoutSeconds, onSuccess, onError]
   );
 

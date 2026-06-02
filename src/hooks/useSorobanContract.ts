@@ -98,7 +98,6 @@ function createReducer<TResult>() {
  * ```
  */
 export function useSorobanContract<TResult = unknown>(
-  options: ContractCallOptions,
   options: ContractCallOptions<TResult>
 ): UseContractCallReturn<TResult> {
   const { config } = useStellarContext();
@@ -149,8 +148,6 @@ export function useSorobanContract<TResult = unknown>(
         const passphrase = networkPassphrase ?? config.networkPassphrase;
 
         const tx = new TransactionBuilder(account, {
-          // TransactionBuilder requires fee as a string
-          fee: String(fee),
           fee: fee.toString(),
           networkPassphrase: passphrase,
         })
