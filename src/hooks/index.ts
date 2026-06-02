@@ -21,6 +21,7 @@ export { useAssetMetadata } from "./useAssetMetadata";
 export type { UseAssetMetadataReturn } from "./useAssetMetadata";
 
 export { useSorobanContract } from "./useSorobanContract";
+export type { ContractCallOptions, UseContractCallReturn } from "../types";
 export { useTransaction } from "./useTransaction";
 export type { UseTransactionOptions, UseTransactionReturn } from "./useTransaction";
 
