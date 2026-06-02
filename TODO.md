@@ -2,3 +2,5 @@
 - [x] Build dist (if needed) and measure bundle size for badge value
 - [x] Verify README renders correctly (badge markdown)
 
+- [ ] Build dist (if needed) and measure bundle size for badge value
+- [x] Verify README renders correctly (badge markdown)
