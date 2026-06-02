@@ -299,7 +299,7 @@ This repository uses Changesets for automated changelog generation, version bump
 - [ ] `usePayment()` — send XLM / SAT payments with one hook
 - [ ] `useClaimableBalance()` — list and claim claimable balances
 - [x] `useContractEvents()` — subscribe to Soroban contract events via streaming
-- [ ] `usePathPayment()` — strict send / receive path payment hook
+- [x] `usePathPayment()` — strict send / receive path payment hook
 - [ ] `useStellarToml()` — fetch and parse a domain's `stellar.toml`
 - [ ] React Query / SWR adapter (optional peer dependency)
 
