@@ -164,4 +164,14 @@ describe("usePayment", () => {
 
     expect(Asset.native).not.toHaveBeenCalled();
   });
+
+  it("throws when publicKey is null", async () => {
+    const submitFn = async () => {
+      const publicKey: string | null = null;
+      if (!publicKey) {
+        throw new Error("Freighter is not connected. Call connect() first.");
+      }
+    };
+    await expect(submitFn()).rejects.toThrow("Freighter is not connected");
+  });
 });

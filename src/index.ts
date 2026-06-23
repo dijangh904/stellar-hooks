@@ -9,6 +9,7 @@
 export { StellarProvider, useStellarContext } from "./context";
 
 // Hooks
+export { useNetwork } from "./hooks/useNetwork";
 export { useFreighter } from "./hooks/useFreighter";
 export { useStellarAccount } from "./hooks/useStellarAccount";
 export { useStellarBalance } from "./hooks/useStellarBalance";
@@ -19,12 +20,23 @@ export { useStellarToml } from "./hooks/useStellarToml";
 export { useAssetMetadata } from "./hooks/useAssetMetadata";
 export { useStellarOffers } from "./hooks/useStellarOffers";
 export { usePayment } from "./hooks/usePayment";
+export type {
+  PaymentAsset,
+  UsePaymentOptions,
+  UsePaymentReturn,
+} from "./hooks/usePayment";
 export { usePathPayment } from "./hooks/usePathPayment";
 export type {
   PathPaymentAsset,
   UsePathPaymentOptions,
   UsePathPaymentReturn,
 } from "./hooks/usePathPayment";
+
+export { useSorobanTokenBalance } from "./hooks/useSorobanTokenBalance";
+export type {
+  SorobanTokenBalanceState,
+  UseSorobanTokenBalanceOptions,
+} from "./hooks/useSorobanTokenBalance";
 
 // Types
 export type {
@@ -61,4 +73,4 @@ export type { UseStellarOffersOptions, UseStellarOffersReturn } from "./hooks/us
 export { NETWORK_CONFIGS } from "./types";
 
 // Utilities
-export { parseAccountResponse, getCache, setCache, clearCache, deleteCache } from "./utils";
+export { parseAccountResponse, getCache, setCache } from "./utils";

@@ -1,3 +1,4 @@
+export { useNetwork } from "./useNetwork";
 export { useStellarAccount } from "./useStellarAccount";
 export type { UseStellarAccountOptions, UseStellarAccountReturn } from "./useStellarAccount";
 export { useStellarBalance } from "./useStellarBalance";
@@ -29,4 +30,15 @@ export { useLedgerEntry } from "./useLedgerEntry";
 export type { UseLedgerEntryOptions } from "./useLedgerEntry";
 
 export { usePayment } from "./usePayment";
+export type {
+  PaymentAsset,
+  UsePaymentOptions,
+  UsePaymentReturn,
+} from "./usePayment";
 export { usePathPayment } from "./usePathPayment";
+
+export { useSorobanTokenBalance } from "./useSorobanTokenBalance";
+export type {
+  SorobanTokenBalanceState,
+  UseSorobanTokenBalanceOptions,
+} from "./useSorobanTokenBalance";

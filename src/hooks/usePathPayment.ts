@@ -149,14 +149,15 @@ export function usePathPayment(
     onError,
   } = options;
 
-  const { config } = useStellarContext();
-  const { signTransaction, publicKey } = useFreighter();
   const { submit: submitXdr, reset, ...txState } = useTransaction({
     mode: "classic",
     timeoutSeconds,
-    onSuccess,
-    onError,
+    ...(onSuccess && { onSuccess }),
+    ...(onError && { onError }),
   });
+
+  const { config } = useStellarContext();
+  const { signTransaction, publicKey } = useFreighter();
 
   const submit = useCallback(async () => {
     if (!publicKey) {

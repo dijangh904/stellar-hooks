@@ -119,8 +119,8 @@ export function usePayment(options: UsePaymentOptions): UsePaymentReturn {
   const { submit: submitXdr, reset, ...txState } = useTransaction({
     mode: "classic",
     timeoutSeconds,
-    onSuccess,
-    onError,
+    ...(onSuccess && { onSuccess }),
+    ...(onError && { onError }),
   });
 
   const submit = useCallback(async () => {

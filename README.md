@@ -1,8 +1,9 @@
 # stellar-hooks
 
-[![npm version](https://img.shields.io/npm/v/stellar-hooks.svg?style=flat-square)](https://www.npmjs.com/package/stellar-hooks)
-[![license](https://img.shields.io/npm/l/stellar-hooks.svg?style=flat-square)](LICENSE)
-[![bundle size](https://img.shields.io/bundlephobia/min/stellar-hooks?style=flat-square)](https://bundlephobia.com/package/stellar-hooks)
+[![npm version](https://img.shields.io/badge/npm-v0.1.0-blue?style=flat-square)](https://www.npmjs.com/package/stellar-hooks)
+[![license](https://img.shields.io/github/license/dark-princezz/stellar-hooks.svg?style=flat-square)](LICENSE)
+[![bundle size](https://img.shields.io/badge/bundle%20size-12.5%20KB-blue?style=flat-square)](https://github.com/dark-princezz/stellar-hooks)
+
 
 > React hooks for Stellar and Soroban. The `wagmi` you've been waiting for.
 
@@ -209,6 +210,37 @@ const key = xdr.LedgerKey.contractData(
 const { data, isLoading, error, refetch } = useLedgerEntry(key, {
   refetchInterval: 3000,
 });
+```
+
+---
+
+### `usePayment(options)`
+
+Build, sign, and submit a classic Stellar payment (native XLM or any Stellar asset) via Freighter in one hook.
+
+```ts
+const {
+  submit,    // () => Promise<void> — build, sign, and submit the payment
+  status,    // "idle" | "submitting" | "polling" | "success" | "error"
+  hash,      // string | null — transaction hash on success
+  isLoading, // boolean
+  isSuccess, // boolean
+  isError,   // boolean
+  error,     // Error | null
+  reset,     // () => void
+} = usePayment({
+  destination: "GBXXX...",
+  asset: { type: "native" },        // XLM
+  // asset: { type: "credit", code: "USDC", issuer: "G..." }, // any asset
+  amount: "10",
+  memo: "Thanks!",                  // optional, max 28 bytes
+  fee: 100,                         // optional, stroops (default: 100)
+  timeoutSeconds: 60,               // optional (default: 60)
+  onSuccess: (hash) => console.log("Sent!", hash),
+  onError:   (err)  => console.error(err),
+});
+
+return <button onClick={submit} disabled={isLoading}>Send XLM</button>;
 ```
 
 ---
