@@ -12,16 +12,27 @@ import { Horizon } from "@stellar/stellar-sdk";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock("@stellar/stellar-sdk", () => {
-  const mockLoadAccount = vi.fn();
+const actualMockLoadAccount = vi.fn();
+
+vi.mock("../utils/memoizedServers", () => {
   return {
+    getHorizonServer: vi.fn().mockReturnValue({
+      loadAccount: (pubKey: string) => actualMockLoadAccount(pubKey),
+    }),
+    clearMemoizedServers: vi.fn(),
+  };
+});
+
+vi.mock("@stellar/stellar-sdk", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
     StrKey: {
-      isValidEd25519PublicKey: vi.fn().mockReturnValue(true),
-    },
-    Horizon: {
-      Server: vi.fn().mockImplementation(() => ({
-        loadAccount: mockLoadAccount,
-      })),
+      ...actual.StrKey,
+      isValidEd25519PublicKey: vi.fn().mockImplementation((val) => {
+        if (!val || val === "invalid-key") return false;
+        return true;
+      }),
     },
   };
 });
@@ -34,7 +45,7 @@ vi.mock("../context", () => ({
   }),
 }));
 
-const mockLoadAccount = vi.mocked(new Horizon.Server("").loadAccount);
+const mockLoadAccount = actualMockLoadAccount;
 
 const XLM_ONLY_RESPONSE = {
   account_id: "GABC...",

@@ -300,9 +300,9 @@ export function useSorobanContract<TResult = unknown>(
         }
         
         let parsed: TResult | null = null;
-        if (sim.result) {
-          const scVal = sim.result.retval;
-          parsed = parseResult ? parseResult(scVal) : scVal as unknown as TResult;
+        const resultVal = sim.result?.retval ?? (sim as any).results?.[0]?.retval;
+        if (resultVal) {
+          parsed = parseResult ? parseResult(resultVal) : resultVal as unknown as TResult;
         }
 
         dispatch({ type: "SUCCESS", payload: parsed as TResult, hash: "simulation" });

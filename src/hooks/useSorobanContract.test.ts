@@ -8,7 +8,7 @@ import { rpc, xdr } from "@stellar/stellar-sdk";
 const mockSignTransaction = vi.fn();
 vi.mock("../hooks/useFreighter", () => ({
   useFreighter: () => ({
-    publicKey: "GABC...",
+    publicKey: "GBRPYHIL2CI3FNQ4BXLFMNDLFYWTJCHWVKCMWAL3ENJBI62PCJ73DZNE",
     networkPassphrase: "Test Net",
     signTransaction: mockSignTransaction,
   }),
@@ -23,10 +23,16 @@ vi.mock("../context", () => ({
 const mockSimulateTransaction = vi.fn();
 const mockSendTransaction = vi.fn();
 const mockGetTransaction = vi.fn();
-const mockGetAccount = vi.fn().mockResolvedValue({ sequenceNumber: () => "1" });
+const mockGetAccount = vi.fn().mockResolvedValue({
+  sequenceNumber: () => "1",
+  accountId: () => "GBRPYHIL2CI3FNQ4BXLFMNDLFYWTJCHWVKCMWAL3ENJBI62PCJ73DZNE",
+});
 
 vi.mock("@stellar/stellar-sdk", async (importOriginal) => {
   const actual = await importOriginal() as any;
+  const mockTx = {
+    toXDR: () => "signed-xdr",
+  };
   return {
     ...actual,
     StrKey: {
@@ -51,6 +57,16 @@ vi.mock("@stellar/stellar-sdk", async (importOriginal) => {
     Contract: vi.fn().mockImplementation(() => ({
       call: vi.fn().mockReturnValue({}),
     })),
+    TransactionBuilder: Object.assign(
+      vi.fn().mockImplementation(() => ({
+        addOperation: vi.fn().mockReturnThis(),
+        setTimeout: vi.fn().mockReturnThis(),
+        build: vi.fn().mockReturnValue(mockTx),
+      })),
+      {
+        fromXDR: vi.fn().mockReturnValue(mockTx),
+      }
+    ),
   };
 });
 
