@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  pull-requests: write
+
 on:
   push:
     branches: ["**"]
@@ -40,6 +43,21 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Stale Issue Bot
+        uses: actions/stale@v9
+        with:
+          days-before-issue-stale: 60
+          days-before-issue-close: 0
+          stale-issue-label: stale
+          close-issue-message: "Closing this issue due to prolonged inactivity."
+      - name: Bundle size report
+        uses: andresz1/size-limit-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: npm ci
